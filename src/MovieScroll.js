@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import axios from 'axios';
+import MovieDetail from "./MovieDetail";
 
 const API_KEY='decc67e8f617c228c9c976bb05cd39ca';
 
@@ -8,6 +9,8 @@ const MovieScroll = () => {
   const [movies,setMovies]=useState([]);
   const [errorMsg,setErrorMsg]=useState(null);
   const [page,setPage]=useState(1);
+  const [selected,setSelected]=useState(null);
+  const [isModalOpen, setIsModalOpen]=useState(false);
   const init_info=async()=>{
     const url=`https://api.themoviedb.org/3/movie/now_playing?api_key=${API_KEY}&language=ko-KR&page=1`;
     try{
@@ -35,6 +38,14 @@ const MovieScroll = () => {
       setErrorMsg('추가 데이터 가져올 때 오류 발생');
     }
   }
+  const handleClick=(info)=>{
+    setSelected(info);
+    setIsModalOpen(true);
+  }
+  const handleClose=()=>{
+    setIsModalOpen(false);
+    setSelected(null);
+  }
   return (
     <InfiniteScroll
       dataLength={movies.length} //현재 데이터 길이
@@ -49,9 +60,10 @@ const MovieScroll = () => {
     >
       <div className="container">
         {
-          movies.map((list,idx)=>{
+          movies.filter((list)=>{return list.poster_path && list.backdrop_path && list.overview && list.vote_average})
+          .map((list,idx)=>{
             return (
-              <div key={idx} className="movie-card">
+              <div key={idx} className="movie-card" onClick={()=>{handleClick(list)}}>
                 <img src={`https://image.tmdb.org/t/p/w500${list.poster_path}`} alt={list.title}/>
                 <div className="overlay">{list.title}</div>
               </div>
@@ -60,6 +72,9 @@ const MovieScroll = () => {
         }
       </div>
       {errorMsg && <p className="error-msg">{errorMsg}</p>}
+      {
+        isModalOpen && <MovieDetail info={selected} onClose={handleClose}/>
+      }
     </InfiniteScroll>
   );
 };
